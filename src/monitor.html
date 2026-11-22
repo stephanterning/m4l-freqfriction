@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>FreqFriction</title>
+<style>
+@font-face {
+    font-family:"Live UI";
+    src:local("AbletonSansSmall-Bold"), local("Ableton Sans Small Bold"), local("AbletonSans-Bold");
+    font-weight:700;
+}
+* { box-sizing:border-box }
+:root { color-scheme:dark; --pane-gap:4px; --protected-plot-bg:#19353d }
+body { margin:0; background:#15171c; color:#d4d9e0; font:700 10px/13px "Live UI",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; user-select:none }
+#monitor { position:absolute; inset:0; display:grid; grid-template-columns:var(--sidebar,192px) 1fr; grid-template-rows:var(--header,48px) minmax(0,1fr); overflow:hidden }
+#heading, #toolbar { min-width:0; position:relative }
+#heading, #sources { background:#1f2126 }
+#heading { padding:5px 9px }
+#helper { position:absolute; bottom:9px; left:9px; right:6px; color:#99a3b0 }
+.ellipsis, #status { white-space:nowrap; text-overflow:ellipsis; overflow:hidden }
+#controls { display:flex; align-items:center; gap:4px; position:absolute; left:calc(var(--sidebar) + var(--pane-gap)); top:2px; right:68px; height:21px }
+.compact #controls { left:4px; top:25px; right:4px }
+button, select { font:inherit; color:inherit; border:0 }
+#controls button, #sensitivity button, select { height:21px; background:#2b3038; padding:0 6px }
+#controls button { width:75px; flex-shrink:1; white-space:nowrap; overflow:hidden }
+#controls button.selected, #sensitivity button[aria-pressed=true] { background:#215e5c }
+#sensitivity { position:absolute; right:70px; top:2px; display:flex; align-items:center; gap:4px }
+#sensitivity span { margin-right:3px }
+#controls { right:270px }
+.stacked #controls { right:68px }
+.stacked #sensitivity { top:25px; right:auto; left:calc(var(--sidebar) + var(--pane-gap)) }
+.compact #sensitivity { left:4px; top:48px }
+.compact #controls { right:4px }
+#zoom { position:absolute; top:2px; right:6px; width:56px }
+#status { color:#ffc282 }
+#axis { position:absolute; bottom:8px; left:calc(var(--labels) + var(--pane-gap)); right:10px; height:13px; color:#adb5c2 }
+#axis span { position:absolute }
+.pane { min-height:0; min-width:0; overflow-x:hidden; overflow-y:auto; overscroll-behavior-y:contain; overflow-anchor:none }
+#sources { margin-right:var(--pane-gap) }
+#spectra { margin-left:var(--pane-gap) }
+.source, .row { display:flex; width:100%; align-items:center; text-align:left; font:inherit; padding:0; border:0; color:inherit; background:transparent }
+.source { height:23px; gap:8px; padding:0 8px; color:#a2a7b1 }
+.source:nth-child(odd) { background:#ffffff07 }
+.source[aria-pressed=true] { color:#e3e8ef }
+.check { flex:0 0 13px; height:13px; text-align:center; background:#585e66; color:white }
+.source[aria-pressed=true] .check { background:#2b7a6e }
+.row { height:var(--row-height,56px); background:#ffffff08; border-bottom:1px solid #15171c; padding-right:10px }
+.row.collapsed { height:19px }
+.source.protected { background:rgba(46,213,232,.16) }
+.row.protected { background:var(--protected-plot-bg) }
+.row.protected .name { color:#b6f5fb }
+.row-label { flex:0 0 var(--labels); min-width:0; align-self:stretch; display:flex; align-items:center; gap:3px; padding:0 6px }
+.fold, .track-name { background:transparent; padding:0; text-align:left }
+.fold { flex:0 0 auto; display:grid; place-items:center; width:14px; height:14px; border:1px solid currentColor; border-radius:50%; cursor:pointer }
+.fold::before { content:''; border-left:3px solid transparent; border-right:3px solid transparent; border-top:4px solid currentColor }
+.fold[aria-expanded=false]::before { transform:rotate(-90deg) }
+.track-name { position:relative; min-width:0; flex:1; line-height:13px }
+.track-name { display:flex; align-items:center }
+.shield { display:none; width:16px; height:16px; flex:none; margin-left:auto; fill:none; stroke:currentColor; stroke-width:2; stroke-linejoin:round }
+.row.protected .track-name { gap:4px }
+.row.protected .shield { display:block }
+.row-label span { display:block }
+.detail { position:absolute; top:100%; left:0; right:0; color:#9eaaba; font-size:9px; line-height:9px }
+.row.collapsed .detail { display:none }
+.source[data-track-color] .check, .row-label[data-track-color] { background:var(--track-bg); color:var(--track-fg) }
+.source[aria-pressed=false] .check {
+    background:var(--track-bg, #a2a7b1);
+    opacity:.28;
+}
+.row .row-label[data-track-color] .name, .row .row-label[data-track-color] .detail { color:inherit }
+.row.protected .row-label { box-shadow:inset 3px 0 var(--protected-plot-bg) }
+canvas { flex:1; width:0; min-width:0; height:100%; pointer-events:none }
+#empty { margin:15px 8px; color:#acb2bd }
+#divider { position:absolute; top:var(--header); bottom:0; left:calc(var(--sidebar) - 6px); width:8px; cursor:col-resize; touch-action:none }
+#divider::before, #divider::after { content:''; position:absolute; left:3px; top:0; width:2px; height:100%; background:#505863 }
+#divider::after { top:50%; left:2px; width:4px; height:26px; transform:translateY(-50%); background:#858f9f }
+#divider:hover::after, #divider.drag::after { background:#a3dbd4 }
+</style></head><body>
+<main id="monitor">
+<header id="heading"><div class="ellipsis" id="count">Sources</div><div class="ellipsis" id="helper"></div></header>
+<header id="toolbar"><div id="axis"></div></header>
+<section class="pane" id="sources" aria-label="Sources"></section>
+<section class="pane" id="spectra" aria-label="Spectra"><div id="rows"></div><div id="empty">No visible sources</div></section>
+<div id="controls"><span>Hold</span><button>Instant</button><button>Short</button><button>Slow</button><span id="status"></span></div>
+<div id="sensitivity" role="group" aria-label="Sensitivity"><span>Sensitivity</span><button>Low</button><button>Medium</button><button>High</button></div>
+<select aria-label="Interface zoom" id="zoom"><option>75%</option><option selected>100%</option><option>125%</option><option>150%</option><option>175%</option><option>200%</option></select>
+<div id="divider" role="separator" aria-label="Source column width" aria-orientation="vertical"></div>
+</main>
+<script>/* MONITOR_SCRIPT */</script></body></html>
