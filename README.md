@@ -1,6 +1,6 @@
 # FreqFriction
 
-When a bass line loses definition as soon as the kick comes in, it can be hard to tell which part of the sound gets buried. FreqFriction is a Max for Live device that helps you find where one track may make another harder to hear. Choose the sound you want to follow and watch which other tracks light up as the mix plays.
+FreqFriction is a Max for Live device that helps you find where one track may make another harder to hear. Choose the sound you want to follow and watch which other tracks light up as the mix plays.
 
 ![FreqFriction showing a spectrum for each selected track and red bands where another track may mask the protected sound](docs/preview.png)
 
@@ -9,8 +9,6 @@ When a bass line loses definition as soon as the kick comes in, it can be hard t
 1. Load [FreqFriction.amxd](FreqFriction.amxd) in Ableton Live and click **Float** to open the monitor.
 2. Select the tracks you want to compare in the left column. In the graph, click the name of the track you want to hear clearly. The shield marks it as the **protected track**.
 3. Play the passage. Each curve shows one track’s spectrum. A red band on another track’s row marks the frequency range where that track may be masking the protected sound.
-
-For example, protect the bass and watch the kick’s row. If a red band appears on kick hits, listen to that passage and briefly lower the kick. If the bass becomes easier to follow, you have a frequency range and a pair of tracks to work with.
 
 **Sensitivity** controls how strong the evidence of a clash must be for a warning to appear. **Hold** keeps brief warnings visible long enough to inspect. For larger sets, [FreqFriction Input](FreqFriction%20Input.amxd) adds 31 stereo inputs to the main device.
 
